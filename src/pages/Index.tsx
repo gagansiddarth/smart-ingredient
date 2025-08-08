@@ -11,10 +11,12 @@ import { runOCR } from "@/utils/ocr";
 import { analyzeIngredients, type AnalysisResult, scoreToHslParts } from "@/utils/analyze";
 import { getRecentScans, saveScan, saveScanPermanently, type Scan } from "@/utils/storage";
 import Seo from "@/components/Seo";
-
-interface IndexProps { initialTab?: "home" | "scan" | "results" | "chat" | "history" }
-
-const Index = ({ initialTab = "home" }: IndexProps) => {
+interface IndexProps {
+  initialTab?: "home" | "scan" | "results" | "chat" | "history";
+}
+const Index = ({
+  initialTab = "home"
+}: IndexProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -28,15 +30,12 @@ const Index = ({ initialTab = "home" }: IndexProps) => {
 
   // History
   const recent = useMemo(() => getRecentScans(), [location.key]);
-
   useEffect(() => {
     setActiveTab(initialTab);
   }, [initialTab]);
-
   const onDrop = (file: File) => {
     setImageFile(file);
   };
-
   const handleRunOCR = async () => {
     if (!imageFile) return;
     setIsOcrRunning(true);
@@ -47,7 +46,6 @@ const Index = ({ initialTab = "home" }: IndexProps) => {
       setIsOcrRunning(false);
     }
   };
-
   const handleAnalyze = async () => {
     const text = ocrText.trim();
     if (!text) return;
@@ -63,42 +61,43 @@ const Index = ({ initialTab = "home" }: IndexProps) => {
       cleaned_ingredients: cleanIngredients(text),
       analysis: res,
       saved: false,
-      user_notes: null,
+      user_notes: null
     };
     saveScan(scan);
     setActiveTab("results");
     navigate("/results");
   };
-
-  const HealthScoreBadge = ({ score }: { score: number }) => {
+  const HealthScoreBadge = ({
+    score
+  }: {
+    score: number;
+  }) => {
     const hslParts = scoreToHslParts(score); // e.g., "120 75% 45%"
-    return (
-      <div className="inline-flex items-center justify-center rounded-xl px-4 py-2 border" style={{
-        // Use semantic dynamic color via CSS variable
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        '--score-color': hslParts,
-        backgroundColor: `hsl(${hslParts} / 0.12)`,
-        borderColor: `hsl(${hslParts} / 0.25)`,
-        color: `hsl(${hslParts})`,
-      } as React.CSSProperties}>
+    return <div className="inline-flex items-center justify-center rounded-xl px-4 py-2 border" style={{
+      // Use semantic dynamic color via CSS variable
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      '--score-color': hslParts,
+      backgroundColor: `hsl(${hslParts} / 0.12)`,
+      borderColor: `hsl(${hslParts} / 0.25)`,
+      color: `hsl(${hslParts})`
+    } as React.CSSProperties}>
         <span className="text-sm font-medium">Health Score</span>
         <span className="ml-2 text-xl font-semibold">{score}</span>
-      </div>
-    );
+      </div>;
   };
-
-  return (
-    <main>
-      {activeTab === "home" && (
-        <section className="min-h-screen flex flex-col">
+  return <main>
+      {activeTab === "home" && <section className="min-h-screen flex flex-col">
           <Seo title="FoodDE – AI Food Label Analyzer" description="Scan ingredients, get a health score, and flag harmful additives with FoodDE." canonical="https://foodde.lovable.app/" />
           <header className="py-6">
             <nav className="container flex items-center justify-between">
               <a href="/" className="font-semibold">FoodDE</a>
               <div className="flex items-center gap-3">
-                <Button variant="premium" onClick={() => navigate('/history')}><HistoryIcon className="mr-2" />History</Button>
-                <Button variant="hero" size="xl" onClick={() => { setActiveTab('scan'); navigate('/scan'); }}>
+                <Button variant="premium" onClick={() => navigate('/history')} className="text-base font-semibold text-black"><HistoryIcon className="mr-2" />History</Button>
+                <Button variant="hero" size="xl" onClick={() => {
+              setActiveTab('scan');
+              navigate('/scan');
+            }}>
                   Start Scan
                 </Button>
               </div>
@@ -109,7 +108,10 @@ const Index = ({ initialTab = "home" }: IndexProps) => {
               <h1 className="text-4xl md:text-5xl font-bold mb-4">Ingredient insights in seconds</h1>
               <p className="text-muted-foreground mb-6">Upload a label or paste text. FoodDE scores healthiness, flags harmful additives, and lets you chat with AI for quick advice.</p>
               <div className="flex gap-3">
-                <Button variant="hero" size="xl" onClick={() => { setActiveTab('scan'); navigate('/scan'); }}>
+                <Button variant="hero" size="xl" onClick={() => {
+              setActiveTab('scan');
+              navigate('/scan');
+            }}>
                   <Upload className="mr-2" /> Start Scan
                 </Button>
                 <Button variant="outline" size="xl" onClick={() => navigate('/history')}>
@@ -145,18 +147,16 @@ const Index = ({ initialTab = "home" }: IndexProps) => {
               </Card>
             </div>
           </section>
-        </section>
-      )}
+        </section>}
 
-      {activeTab === "scan" && (
-        <section className="min-h-screen container py-10">
+      {activeTab === "scan" && <section className="min-h-screen container py-10">
           <Seo title="Scan Ingredients – FoodDE" description="Upload a label or paste ingredients to analyze health impact." canonical="https://foodde.lovable.app/scan" />
           <h1 className="text-3xl font-bold mb-6">Scan Ingredients</h1>
           <div className="grid lg:grid-cols-2 gap-8">
             <Card className="p-6 card-elevated">
               <p className="text-sm text-muted-foreground mb-3">Upload image</p>
               <label className="block border border-dashed rounded-xl p-8 text-center cursor-pointer">
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files && onDrop(e.target.files[0])} />
+                <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files && onDrop(e.target.files[0])} />
                 <ImageIcon className="mx-auto mb-2" />
                 <span className="text-sm">Drag & drop or click to upload</span>
               </label>
@@ -168,18 +168,16 @@ const Index = ({ initialTab = "home" }: IndexProps) => {
             </Card>
             <Card className="p-6 card-elevated">
               <p className="text-sm text-muted-foreground mb-3">Paste or edit ingredients</p>
-              <Textarea rows={12} placeholder="e.g. Wheat flour, Sugar, Palm Oil, E102, Salt, Natural flavors" value={ocrText} onChange={(e) => setOcrText(e.target.value)} />
+              <Textarea rows={12} placeholder="e.g. Wheat flour, Sugar, Palm Oil, E102, Salt, Natural flavors" value={ocrText} onChange={e => setOcrText(e.target.value)} />
               <div className="mt-4 grid sm:grid-cols-2 gap-3">
-                <Input type="password" placeholder="Optional: OpenAI API Key for AI mode" value={apiKey} onChange={(e) => setApiKey(e.target.value)} />
+                <Input type="password" placeholder="Optional: OpenAI API Key for AI mode" value={apiKey} onChange={e => setApiKey(e.target.value)} />
                 <Button variant="hero" onClick={handleAnalyze}>Analyze</Button>
               </div>
             </Card>
           </div>
-        </section>
-      )}
+        </section>}
 
-      {activeTab === "results" && analysis && (
-        <section className="min-h-screen container py-10">
+      {activeTab === "results" && analysis && <section className="min-h-screen container py-10">
           <Seo title="Results – FoodDE" description="See health score, flags, and quick advice for your scan." canonical="https://foodde.lovable.app/results" />
           <h1 className="text-3xl font-bold mb-6">Results</h1>
           <Card className="p-6 card-elevated">
@@ -190,19 +188,15 @@ const Index = ({ initialTab = "home" }: IndexProps) => {
             <div className="mt-6">
               <h2 className="text-lg font-semibold mb-3">Ingredients</h2>
               <ul className="grid sm:grid-cols-2 gap-3">
-                {analysis.breakdown.map((b) => (
-                  <li key={b.ingredient} className="flex items-center justify-between border rounded-lg p-3">
+                {analysis.breakdown.map(b => <li key={b.ingredient} className="flex items-center justify-between border rounded-lg p-3">
                     <span className="font-medium">{b.ingredient}</span>
                     <Badge variant={b.classification === 'Healthy' ? 'secondary' : b.classification === 'Moderately Harmful' ? 'default' : 'destructive'}>
                       {b.classification}
                     </Badge>
-                  </li>
-                ))}
+                  </li>)}
               </ul>
               <div className="mt-6 flex flex-wrap gap-2">
-                {analysis.flags.map((f) => (
-                  <Badge key={f} variant="destructive"><TriangleAlert className="mr-1" /> {f}</Badge>
-                ))}
+                {analysis.flags.map(f => <Badge key={f} variant="destructive"><TriangleAlert className="mr-1" /> {f}</Badge>)}
               </div>
               <div className="mt-6 flex gap-3">
                 <Button onClick={() => navigate('/chat')}>Chat about these ingredients</Button>
@@ -212,16 +206,13 @@ const Index = ({ initialTab = "home" }: IndexProps) => {
               </div>
             </div>
           </Card>
-        </section>
-      )}
+        </section>}
 
-      {activeTab === "history" && (
-        <section className="min-h-screen container py-10">
+      {activeTab === "history" && <section className="min-h-screen container py-10">
           <Seo title="History – FoodDE" description="Review your recent and saved scans." canonical="https://foodde.lovable.app/history" />
           <h1 className="text-3xl font-bold mb-6">History (last 24h)</h1>
           <div className="grid lg:grid-cols-2 gap-6">
-            {recent.map((scan) => (
-              <Card key={scan.scan_id} className="p-5 card-elevated">
+            {recent.map(scan => <Card key={scan.scan_id} className="p-5 card-elevated">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">{new Date(scan.timestamp).toLocaleString()}</p>
@@ -230,32 +221,24 @@ const Index = ({ initialTab = "home" }: IndexProps) => {
                   <HealthScoreBadge score={scan.analysis.health_score} />
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {scan.analysis.flags.slice(0,4).map(f => (
-                    <Badge key={f} variant="destructive">{f}</Badge>
-                  ))}
+                  {scan.analysis.flags.slice(0, 4).map(f => <Badge key={f} variant="destructive">{f}</Badge>)}
                 </div>
-              </Card>
-            ))}
+              </Card>)}
           </div>
-        </section>
-      )}
+        </section>}
 
-      {activeTab === "chat" && (
-        <section className="min-h-screen container py-10">
+      {activeTab === "chat" && <section className="min-h-screen container py-10">
           <Seo title="AI Chat – FoodDE" description="Ask follow-ups about your latest scan." canonical="https://foodde.lovable.app/chat" />
           <h1 className="text-3xl font-bold mb-6">AI Chat</h1>
           <Card className="p-6 card-elevated">
             <p className="text-sm text-muted-foreground mb-3">Enter an OpenAI API key to enable AI answers (client-side for demo)</p>
             <div className="grid sm:grid-cols-2 gap-3 mb-4">
-              <Input type="password" placeholder="OpenAI API Key" value={apiKey} onChange={(e) => setApiKey(e.target.value)} />
+              <Input type="password" placeholder="OpenAI API Key" value={apiKey} onChange={e => setApiKey(e.target.value)} />
               <Button variant="premium" onClick={() => setApiKey(apiKey)}>Use Key</Button>
             </div>
             <p className="text-sm text-muted-foreground">This demo runs entirely in the browser for speed during the hackathon. For production, move keys to a backend or Supabase Edge Function.</p>
           </Card>
-        </section>
-      )}
-    </main>
-  );
+        </section>}
+    </main>;
 };
-
 export default Index;
