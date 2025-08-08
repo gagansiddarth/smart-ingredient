@@ -11,6 +11,9 @@ import { runOCR } from "@/utils/ocr";
 import { analyzeIngredients, type AnalysisResult, scoreToHslParts } from "@/utils/analyze";
 import { getRecentScans, saveScan, saveScanPermanently, type Scan } from "@/utils/storage";
 import Seo from "@/components/Seo";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { saveScanToSupabase } from "@/utils/db";
 interface IndexProps {
   initialTab?: "home" | "scan" | "results" | "chat" | "history";
 }
@@ -27,12 +30,19 @@ const Index = ({
   const [isOcrRunning, setIsOcrRunning] = useState(false);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [apiKey, setApiKey] = useState<string>("");
-
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   // History
   const recent = useMemo(() => getRecentScans(), [location.key]);
   useEffect(() => {
     setActiveTab(initialTab);
   }, [initialTab]);
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setIsLoggedIn(!!session);
+    });
+    supabase.auth.getSession().then(({ data: { session } }) => setIsLoggedIn(!!session));
+    return () => subscription.unsubscribe();
+  }, []);
   const onDrop = (file: File) => {
     setImageFile(file);
   };
@@ -93,11 +103,14 @@ const Index = ({
             <nav className="container flex items-center justify-between">
               <a href="/" className="font-semibold">FoodDE</a>
               <div className="flex items-center gap-3">
-                <Button variant="premium" onClick={() => navigate('/history')} className="text-base font-semibold text-black"><HistoryIcon className="mr-2" />History</Button>
-                <Button variant="hero" size="xl" onClick={() => {
-              setActiveTab('scan');
-              navigate('/scan');
-            }}>
+                <Button variant="outline" onClick={() => navigate('/history')} className="text-base font-semibold"><HistoryIcon className="mr-2" />History</Button>
+                <Button variant="outline" onClick={() => navigate('/saved')} className="text-base font-semibold">Saved</Button>
+                {isLoggedIn ? (
+                  <Button variant="ghost" onClick={async () => { await supabase.auth.signOut(); toast({ title: 'Signed out' }); }}>Logout</Button>
+                ) : (
+                  <Button variant="ghost" onClick={() => navigate('/auth')}>Login</Button>
+                )}
+                <Button variant="hero" size="xl" onClick={() => { setActiveTab('scan'); navigate('/scan'); }}>
                   Start Scan
                 </Button>
               </div>
@@ -200,7 +213,35 @@ const Index = ({
               </div>
               <div className="mt-6 flex gap-3">
                 <Button onClick={() => navigate('/chat')}>Chat about these ingredients</Button>
-                <Button variant="premium" onClick={() => saveScanPermanently(analysis)}>
+                <Button
+                  variant="premium"
+                  onClick={async () => {
+                    if (!isLoggedIn) {
+                      toast({ title: 'Login required', description: 'Sign in to save scans.' });
+                      navigate('/auth');
+                      return;
+                    }
+                    const text = ocrText.trim();
+                    const scan: Scan = {
+                      scan_id: crypto.randomUUID(),
+                      timestamp: new Date().toISOString(),
+                      source: imageFile ? 'image' : 'text',
+                      image_path: null,
+                      raw_text: text || analysis.summary, // fallback
+                      cleaned_ingredients: cleanIngredients(text || ''),
+                      analysis,
+                      saved: true,
+                      user_notes: null,
+                    };
+                    const { error } = await saveScanToSupabase(scan);
+                    if (error) {
+                      toast({ title: 'Save failed', description: error.message });
+                    } else {
+                      toast({ title: 'Saved', description: 'Scan saved to your account.' });
+                      navigate('/saved');
+                    }
+                  }}
+                >
                   Save Scan
                 </Button>
               </div>
