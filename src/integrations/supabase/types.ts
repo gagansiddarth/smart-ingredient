@@ -14,7 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          scan_id: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          scan_id?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          scan_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_scan_id_fkey"
+            columns: ["scan_id"]
+            isOneToOne: false
+            referencedRelation: "scans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      scans: {
+        Row: {
+          analysis: Json
+          cleaned_ingredients: string[]
+          created_at: string
+          id: string
+          image_url: string | null
+          raw_text: string
+          saved: boolean
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analysis: Json
+          cleaned_ingredients?: string[]
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          raw_text: string
+          saved?: boolean
+          source: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analysis?: Json
+          cleaned_ingredients?: string[]
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          raw_text?: string
+          saved?: boolean
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
